@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RSA Encryption/Decryption</title>
+</head>
+<body>
+    <h1>RSA Encryption/Decryption</h1>
+
+    <textarea id="inputText" placeholder="Enter text to encrypt"></textarea>
+    <button onclick="generateKeys()">Generate Keys</button>
+    <button onclick="encrypt()">Encrypt</button>
+    <button onclick="decrypt()">Decrypt</button>
+
+    <p>Public Key (n, e): <span id="publicKey"></span></p>
+    <p>Private Key (n, d): <span id="privateKey"></span></p>
+    <p>Encrypted Text: <span id="encryptedText"></span></p>
+    <p>Decrypted Text: <span id="decryptedText"></span></p>
+
+    <script>
+        let publicKey, privateKey;
+
+        function generateKeys() {
+            const p = 61; // Replace with your own prime numbers for a secure implementation
+            const q = 53;
+            const n = p * q;
+            const phi = (p - 1) * (q - 1);
+            let e = 17; // Typically, a small prime number is used as the public exponent
+            while (gcd(e, phi) !== 1) {
+                e++;
+            }
+            const d = modInverse(e, phi);
+
+            publicKey = { n, e };
+            privateKey = { n, d };
+
+            document.getElementById('publicKey').textContent = `(${n}, ${e})`;
+            document.getElementById('privateKey').textContent = `(${n}, ${d})`;
+        }
+
+        function encrypt() {
+            const inputText = document.getElementById('inputText').value;
+            const encrypted = rsaEncrypt(inputText, publicKey);
+            document.getElementById('encryptedText').textContent = encrypted;
+        }
+
+        function decrypt() {
+            const encryptedText = document.getElementById('encryptedText').textContent;
+            const decrypted = rsaDecrypt(encryptedText, privateKey);
+            document.getElementById('decryptedText').textContent = decrypted;
+        }
+
+        function gcd(a, b) {
+            if (b === 0) {
+                return a;
+            }
+            return gcd(b, a % b);
+        }
+
+        function modInverse(a, m) {
+            for (let x = 1; x < m; x++) {
+                if ((a * x) % m === 1) {
+                    return x;
+                }
+            }
+            return 1;
+        }
+
+        function rsaEncrypt(plainText, publicKey) {
+            const { n, e } = publicKey;
+            const encrypted = [];
+            for (let i = 0; i < plainText.length; i++) {
+                const charCode = plainText.charCodeAt(i);
+                encrypted.push(modPow(charCode, e, n));
+            }
+            return encrypted.join(' ');
+        }
+
+        function rsaDecrypt(encryptedText, privateKey) {
+            const { n, d } = privateKey;
+            const encryptedChars = encryptedText.split(' ');
+            const decryptedChars = [];
+            for (let i = 0; i < encryptedChars.length; i++) {
+                const encryptedCharCode = parseInt(encryptedChars[i], 10);
+                decryptedChars.push(String.fromCharCode(modPow(encryptedCharCode, d, n)));
+            }
+            return decryptedChars.join('');
+        }
+
+        function modPow(base, exponent, modulus) {
+            if (exponent === 0) {
+                return 1;
+            }
+            let result = 1;
+            base = base % modulus;
+            while (exponent > 0) {
+                if (exponent % 2 === 1) {
+                    result = (result * base) % modulus;
+                }
+                exponent = Math.floor(exponent / 2);
+                base = (base * base) % modulus;
+            }
+            return result;
+        }
+    </script>
+</body>
+</html>
